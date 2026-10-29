@@ -1,0 +1,13 @@
+# Keep server-only materials out of the public GitHub repository
+.env
+.env.*
+*.sql
+*.sql.gz
+PRIVATE/
+config.local.php
+deployment.php
+*BACKEND*.zip
+*LOCAL-TEST*.zip
+data/preview-story.json
+.DS_Store
+__pycache__/

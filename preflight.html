@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>2875｜前後台連線檢查</title><style>
+:root{color-scheme:dark}body{margin:0;background:#0c1014;color:#f3efe9;font:15px/1.75 system-ui,'Noto Sans TC',sans-serif}main{max-width:780px;margin:36px auto;padding:0 22px}h1{font-size:28px}h2{font-size:19px}p{color:#b7bec0}code{overflow-wrap:anywhere;color:#f0ad8a}button{background:#b9553b;color:#fff;padding:12px 18px;border:1px solid #db8c67;cursor:pointer;font:inherit}li{margin:9px 0;padding:11px 14px;background:#1a2228;border-left:3px solid #8e9a9e}li.ok{border-color:#73ad91}li.fail{border-color:#d57b68}li.warn{border-color:#dcc08c}a{color:#e9a67d}.tip{padding:14px;border:1px solid #495259}small{color:#b4babe}
+</style></head><body><main><a href="./index.html">← 回到遊戲</a><h1>2875：末日餘燼｜前後台連線檢查</h1><p>此頁只讀取公開 API 與公開圖片，<strong>不會新增玩家遊玩紀錄</strong>，也不會登入管理後台。請在 GitHub Pages 網址開啟本頁，以測試真正的跨網域請求。</p><div class="tip"><b>目前 API：</b><code id="api-url"></code><br><b>故事代碼：</b><code id="slug"></code><br><small id="origin"></small></div><p><button id="check" type="button">開始檢查</button></p><ol id="results" aria-live="polite"></ol><h2>如果檢查失敗</h2><p>請先確認 ConoHa 已完成 HTTPS、API 已安裝、後台故事已發布至 <code>prod</code>，以及後台「API 跨站設定」包含當前網頁的完整 Origin（通常是 <code>https://帳號.github.io</code>，不含 Repository 子目錄）。健康檢查成功並不代表 POST 遊玩紀錄成功，請在遊戲內完成一次選擇以驗證寫入。</p></main><script src="config.js"></script><script>
+(() => {'use strict';const c=window.ASHES_CONFIG,el=id=>document.getElementById(id),out=el('results');el('api-url').textContent=c.apiBase;el('slug').textContent=c.slug;el('origin').textContent='測試 Origin：'+location.origin;
+function item(message,status='warn'){const li=document.createElement('li');li.className=status;li.textContent=message;out.append(li);}
+async function fetchJSON(url){const response=await fetch(url,{credentials:'omit',cache:'no-store'});const payload=await response.json();if(!response.ok||!payload?.ok)throw new Error(payload?.error||'HTTP '+response.status);return payload;}
+async function testImage(source){return new Promise(resolve=>{const img=new Image();const timer=setTimeout(()=>resolve(false),6000);img.onload=()=>{clearTimeout(timer);resolve(true)};img.onerror=()=>{clearTimeout(timer);resolve(false)};img.src=source;});}
+el('check').addEventListener('click',async()=>{out.replaceChildren();el('check').disabled=true;try{
+  const health=await fetchJSON(c.apiBase+'?action=health');item('API 健康檢查成功（版本 '+(health.api_version??'?')+'）','ok');
+  const res=await fetchJSON(c.apiBase+'?action=story&slug='+encodeURIComponent(c.slug));const story=res.story||{};const nodes=story.nodes||{};const endings=Object.values(nodes).filter(n=>n.type==='ending').map(n=>n.ending_id).sort();
+  item('正式版讀取成功：revision '+res.revision+'、'+Object.keys(nodes).length+' 個節點、結局 '+endings.join(' / '),'ok');
+  if(!nodes[story.entry])item('錯誤：起始節點不存在。','fail');else item('起始節點可正確讀取：'+story.entry,'ok');
+  const bad=Object.entries(nodes).flatMap(([id,n])=>(n.choices||[]).filter(o=>!nodes[o.next]).map(o=>id+' → '+o.next));
+  item(bad.length?'錯誤：以下選項指向不存在的節點：'+bad.join(', '):'所有選項的目標節點均存在',bad.length?'fail':'ok');
+  const raw=nodes[story.entry]?.image||'';const url=raw.startsWith('/uploads/')?new URL(raw,c.imageBase).href:raw;
+  if(url){const ok=await testImage(url);item(ok?'首幕圖片載入成功':'首幕遠端圖片載入失敗；請確認 /uploads/ 檔案是否存在。',ok?'ok':'fail');}
+  else item('首幕未指定圖片網址。','warn');
+  item('下一步：回遊戲完成一次選擇，確認 ConoHa 後台增加一筆 run 與 event。','warn');
+}catch(e){item('檢查失敗：'+e.message+'。若瀏覽器顯示 Failed to fetch，可能是 ConoHa 未允許此 Origin、HTTPS 或網路連線有問題。','fail');}
+finally{el('check').disabled=false;}});
+})();
+</script></body></html>

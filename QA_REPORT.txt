@@ -1,0 +1,13 @@
+E01: PASS 15 choices, 15 server events, 0px overflow
+E02: PASS 15 choices, 15 server events, 0px overflow
+E03: PASS 15 choices, 15 server events, 0px overflow
+PREFLIGHT: PASS, read-only API diagnostics, no created runs
+RESPONSIVE/HOVER: PASS 320,375,390,768,1366,1920px no horizontal overflow
+BLACK CURTAIN: PASS (visible opacity=0.68, fully reveals)
+PUBLIC PACKAGE: PASS no preview-story JSON
+
+NOT TESTED: real ConoHa database/CORS/prod publish/asset responses.
+
+Scope: Chromium automated tests with a **simulated API** matching the v0.2.10 contract.
+These tests are not evidence of live production success.
+Additional unresolved asset: E01 reuses a non-dawn image until a dedicated image is supplied and published.
